@@ -1,0 +1,12 @@
+transformers
+trl
+accelerate
+deepspeed
+datasets
+flash-attn
+torch
+bitsandbytes
+datasets
+einops
+sentencepiece
+tqdm
