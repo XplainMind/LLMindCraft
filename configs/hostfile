@@ -1,2 +1,2 @@
-worker-2 slots=8
-worker-2 slots=8
+Worker-1 slots=8
+Worker-2 slots=8

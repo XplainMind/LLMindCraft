@@ -1,6 +1,6 @@
 {
     "zero_optimization": {
-        "stage": 2,
+        "stage": 3,
         "allgather_partitions": true,
         "allgather_bucket_size": 5e8,
         "reduce_scatter": true,

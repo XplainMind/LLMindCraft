@@ -1,6 +1,6 @@
 {
     "zero_optimization": {
-        "stage": 2,
+        "stage": 3,
         "allgather_partitions": true,
         "allgather_bucket_size": 5e8,
         "reduce_scatter": true,
@@ -9,7 +9,7 @@
         "contiguous_gradients": true
     },
     "fp16": {
-        "enabled": "auto",
+        "enabled": false,
         "auto_cast": false,
         "loss_scale": 0,
         "loss_scale_window": 1000,
@@ -18,7 +18,7 @@
         "min_loss_scale": 1
     },
     "bf16": {
-        "enabled": "auto"
+        "enabled": true
     },
     "optimizer": {
         "type": "AdamW",
