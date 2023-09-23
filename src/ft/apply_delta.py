@@ -1,4 +1,6 @@
+#!python
 # -*- coding: utf-8 -*-
+
 import argparse
 import gc
 import glob
@@ -9,9 +11,8 @@ import tempfile
 
 from huggingface_hub import snapshot_download
 import torch
-from torch import nn
 from tqdm import tqdm
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
+from transformers import AutoModelForCausalLM    
 from transformers import LlamaTokenizer, LlamaConfig, LlamaForCausalLM
 
 """
@@ -20,12 +21,11 @@ Apply the delta weights on top of a base model.
 Usage:
 python3 -m fastchat.model.apply_delta --base ~/model_weights/llama-7b --target ~/model_weights/vicuna-7b --delta lmsys/vicuna-7b-delta-v1.1
 """
-PROXIES = {
-    "http": os.environ.get("http_proxy", ""),
-    "https": os.environ.get("https_proxy", ""),
+PROXIES={
+    'http': os.environ.get('http_proxy', ''),
+    'https': os.environ.get('https_proxy', '')
 }
 GB = 1 << 30
-
 
 def split_files(model_path, tmp_path, split_size):
     if not os.path.exists(model_path):
@@ -76,9 +76,7 @@ def apply_delta_low_cpu_mem(base_model_path, target_model_path, delta_path):
     # base_tokenizer = AutoTokenizer.from_pretrained(base_model_path, use_fast=False)
     # base_config = AutoConfig.from_pretrained(base_model_path)
 
-    base_tokenizer = LlamaTokenizer.from_pretrained(
-        base_model_path, use_fast=False, proxies=PROXIES
-    )
+    base_tokenizer = LlamaTokenizer.from_pretrained(base_model_path, use_fast=False, proxies=PROXIES)
     base_config = LlamaConfig.from_pretrained(base_model_path, proxies=PROXIES)
 
     if os.path.exists(target_model_path):
@@ -139,14 +137,9 @@ def apply_delta(base_model_path, target_model_path, delta_path):
     # )
     # base_tokenizer = AutoTokenizer.from_pretrained(base_model_path, use_fast=False)
     base = LlamaForCausalLM.from_pretrained(
-        base_model_path,
-        torch_dtype=torch.float16,
-        low_cpu_mem_usage=True,
-        proxies=PROXIES,
+        base_model_path, torch_dtype=torch.float16, low_cpu_mem_usage=True, proxies=PROXIES
     )
-    base_tokenizer = LlamaTokenizer.from_pretrained(
-        base_model_path, use_fast=False, proxies=PROXIES
-    )
+    base_tokenizer = LlamaTokenizer.from_pretrained(base_model_path, use_fast=False, proxies=PROXIES)
 
     print(f"Loading the delta from {delta_path}")
     delta = AutoModelForCausalLM.from_pretrained(

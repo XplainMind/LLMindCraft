@@ -18,14 +18,19 @@ from transformers import (
     PreTrainedTokenizerBase,
 )
 from transformers.utils import PaddingStrategy
-from trl import AutoModelForCausalLMWithValueHead, PPOConfig, PPOTrainer, set_seed
+from trl import AutoModelForCausalLMWithValueHead, PPOConfig, set_seed
 from trl.core import LengthSampler
 from multiprocessing import cpu_count
 
+from src.rlhf.ppo_trainer import PPOTrainerForZero3 as PPOTrainer
 
 accelerator = Accelerator()
-tqdm.pandas()
 
+tqdm.pandas()
+import logging
+logging.basicConfig(format=f'[%(asctime)s] [%(levelname)s] [%(filename)s:%(lineno)d:%(funcName)s] [Rank {accelerator.process_index}] %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 def print_rank_0(msg, log_file):
     if accelerator.is_main_process:
@@ -43,9 +48,6 @@ class ScriptArguments:
     # NOTE: gpt2 models use Conv1D instead of Linear layers which are not yet supported in 8 bit mode
     # models like gpt-neo* models are more suitable.
     model_name: Optional[str] = field(default="", metadata={"help": "the model name"})
-    tokenizer_name: Optional[str] = field(
-        default="", metadata={"help": "the tokenizer name"}
-    )
     reward_model_name: Optional[str] = field(
         default="", metadata={"help": "the reward model name"}
     )
@@ -84,9 +86,6 @@ class ScriptArguments:
         default=0.0,
         metadata={"help": "a baseline value that is subtracted from the reward"},
     )
-    batched_gen: Optional[bool] = field(
-        default=False, metadata={"help": "whether to use the batched text gen"}
-    )
     save_freq: Optional[int] = field(
         default=None, metadata={"help": "n steps to save the model"}
     )
@@ -104,8 +103,8 @@ class ScriptArguments:
     adap_kl_ctrl: Optional[bool] = field(
         default=True, metadata={"help": "Use adaptive KL control, otherwise linear"}
     )
-    load_in_8bit: Optional[bool] = field(
-        default=False, metadata={"help": "Load in 8bit"}
+    do_sample: Optional[bool] = field(
+        default=True, metadata={"help": "Do sample when generating"}
     )
     logging_dir: Optional[str] = field(default="logs", metadata={"help": "Logging dir"})
     use_llama: Optional[bool] = field(default=True, metadata={"help": "Use llama"})
@@ -191,9 +190,9 @@ def main():
     script_args: ScriptArguments = parser.parse_args_into_dataclasses()[0]
     log_file = os.path.join(script_args.output_dir, "print_log.txt")
 
-    # We then define the arguments to pass to the sentiment analysis pipeline.
-    # We set `return_all_scores` to True to get the sentiment score for each token.
-    sent_kwargs = {
+    # We then define the arguments to pass to the reward model pipeline.
+    # We set `return_all_scores` to True to get the classification score for each token.
+    reward_model_kwargs = {
         "top_k": None,
         "function_to_apply": "none",
         "batch_size": script_args.mini_batch_size,
@@ -201,7 +200,7 @@ def main():
     }
 
     if script_args.use_llama:
-        tokenizer = LlamaTokenizer.from_pretrained(script_args.tokenizer_name)
+        tokenizer = LlamaTokenizer.from_pretrained(script_args.model_name)
         tokenizer.add_special_tokens(
             {
                 "bos_token": "<s>",
@@ -211,7 +210,7 @@ def main():
             }
         )
     else:
-        tokenizer = AutoTokenizer.from_pretrained(script_args.tokenizer_name)
+        tokenizer = AutoTokenizer.from_pretrained(script_args.model_name)
         tokenizer.add_special_tokens({"pad_token": tokenizer.unk_token})
     tokenizer.padding_side = "left"
     print_rank_0(
@@ -255,7 +254,6 @@ def main():
     set_seed(config.seed)
 
     # Now let's build the model, the reference model, and the tokenizer.
-    current_device = accelerator.local_process_index
 
     if script_args.use_lora:
         lora_config = LoraConfig(
@@ -270,22 +268,17 @@ def main():
 
     model = AutoModelForCausalLMWithValueHead.from_pretrained(
         config.model_name,
-        load_in_8bit=script_args.load_in_8bit,
         peft_config=lora_config,
-        device_map={"": current_device},
     )
     model.config.pad_token_id = tokenizer.pad_token_id
     model.config.use_cache = False
 
     ref_model = AutoModelForCausalLMWithValueHead.from_pretrained(
         config.model_name,
-        load_in_8bit=script_args.load_in_8bit,
         peft_config=lora_config,
-        device_map={"": current_device},
     )
     ref_model.config.pad_token_id = tokenizer.pad_token_id
     ref_model.config.use_cache = False
-    print(f"rank: {accelerator.process_index}, local_rank: {current_device}")
 
     optimizer = DummyOptim(
         filter(lambda p: p.requires_grad, model.parameters()), lr=config.learning_rate
@@ -311,16 +304,15 @@ def main():
         optimizer=optimizer,
     )
     ppo_trainer.current_device = accelerator.device
-
+    logger.debug("After ppo_trainer initialized")
     # We then build the text classification pipeline using our reward model, passing the
     # model name and the text classification pipeline arguments. Let's also make sure to
     # set the device to the same device as the PPOTrainer.
-    sentiment_pipe = pipeline(
+    reward_model_pipe = pipeline(
         "text-classification",
         model=script_args.reward_model_name,
-        device_map={"": current_device},
         model_kwargs={
-            "load_in_8bit": script_args.load_in_8bit,
+            "load_in_8bit": True,
             "pad_token_id": tokenizer.pad_token_id,
         },
         tokenizer=tokenizer,
@@ -334,7 +326,7 @@ def main():
         # "min_length": -1,
         "top_k": 0,
         "top_p": 1.0,
-        "do_sample": True,
+        "do_sample": script_args.do_sample,
         "pad_token_id": tokenizer.pad_token_id,
         "eos_token_id": tokenizer.eos_token_id,
     }
@@ -353,18 +345,21 @@ def main():
             desc=f"rank: {accelerator.process_index}, ppo_epoch",
         ):
             question_tensors = batch["input_ids"]
+            logger.debug("Begin ppo_trainer.generate")
             response_tensors = ppo_trainer.generate(
                 question_tensors,
                 return_prompt=False,
                 length_sampler=output_length_sampler,
                 **generation_kwargs,
             )
+            logger.debug("After ppo_trainer.generate")
             batch["response"] = tokenizer.batch_decode(
                 response_tensors, skip_special_tokens=True
             )
-            # Compute reward score (using the sentiment analysis pipeline)
+            # Compute reward score (using the reward_model pipeline)
             texts = [q + r for q, r in zip(batch["query"], batch["response"])]
-            pipe_outputs = sentiment_pipe(texts, **sent_kwargs)
+            pipe_outputs = reward_model_pipe(texts, **reward_model_kwargs)
+            logger.debug("After reward_model_pipe")
             rewards = [
                 torch.tensor(output[0]["score"] - script_args.reward_baseline)
                 for output in pipe_outputs
@@ -372,18 +367,19 @@ def main():
 
             # Run PPO step
             stats = ppo_trainer.step(question_tensors, response_tensors, rewards)
+            logger.debug("After ppo_trainer.step")
             ppo_trainer.log_stats(stats, batch, rewards)
 
             total_ppo_epoch = data_epoch * config.total_ppo_epochs + ppo_epoch
             if (
                 script_args.save_freq
-                and total_ppo_epoch % script_args.save_freq == 0
-                and accelerator.is_main_process
+                and (total_ppo_epoch + 1) % script_args.save_freq == 0
             ):
                 ppo_trainer.save_pretrained(
-                    script_args.output_dir + f"step_{total_ppo_epoch}"
+                    f"{script_args.output_dir}/step_{total_ppo_epoch}"
                 )
-        accelerator.wait_for_everyone()
+    ppo_trainer.save_pretrained(script_args.output_dir)
+    accelerator.wait_for_everyone()
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ from transformers import (
 )
 from transformers.utils import PaddingStrategy
 from transformers.trainer_utils import get_last_checkpoint
-from trl import RewardConfig
+from trl import RewardConfig, RewardTrainer
 from torch import nn
 import logging
 from multiprocessing import cpu_count
@@ -143,8 +143,8 @@ class ScriptArguments:
     load_in_4bit: Optional[bool] = field(
         default=False, metadata={"help": "load the model in 4 bits precision"}
     )
-    use_peft: Optional[bool] = field(
-        default=False, metadata={"help": "Wether to use PEFT or not to train adapters"}
+    use_lora: Optional[bool] = field(
+        default=False, metadata={"help": "Wether to use LoRA or not to train adapters"}
     )
     trust_remote_code: Optional[bool] = field(
         default=True, metadata={"help": "Enable `trust_remote_code`"}
@@ -152,25 +152,6 @@ class ScriptArguments:
     seq_length: Optional[int] = field(
         default=512, metadata={"help": "Input sequence length"}
     )
-
-
-class RewardTrainer(Trainer):
-    def compute_loss(self, model, inputs, return_outputs=False):
-        rewards_chosen = model(
-            input_ids=inputs["input_ids_chosen"],
-            attention_mask=inputs["attention_mask_chosen"],
-        )[0]
-        rewards_rejected = model(
-            input_ids=inputs["input_ids_rejected"],
-            attention_mask=inputs["attention_mask_rejected"],
-        )[0]
-        loss = -nn.functional.logsigmoid(rewards_chosen - rewards_rejected).mean()
-        if return_outputs:
-            return loss, {
-                "rewards_chosen": rewards_chosen,
-                "rewards_rejected": rewards_rejected,
-            }
-        return loss
 
 
 # Tokenize chosen/rejected pairs of inputs
@@ -399,7 +380,7 @@ def main():
     model.config.pad_token_id = 0
 
     # Define the LoraConfig
-    if script_args.use_peft:
+    if script_args.use_lora:
         peft_config = LoraConfig(
             r=16,
             lora_alpha=16,
@@ -450,7 +431,9 @@ def main():
     elif last_checkpoint is not None:
         checkpoint = last_checkpoint
     trainer.train(resume_from_checkpoint=checkpoint)
-    trainer.save_model(training_args.output_dir)
+    if accelerator.is_main_process:
+        trainer.save_model(training_args.output_dir)
+    accelerator.wait_for_everyone()
     print_rank_0(
         "\n Training completed!!! If there's a warning about missing keys above, please disregard :)",
         log_file,

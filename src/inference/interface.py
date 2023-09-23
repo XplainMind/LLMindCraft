@@ -11,15 +11,6 @@ from transformers import (
 )
 from src.models.llama.modeling_llama import LlamaForCausalLM
 
-# import sys
-# import traceback
-# import pudb
-# 异常时中断
-# def debug_on_exception(exctype, value, tb):
-#     traceback.print_exception(exctype, value, tb)
-#     pudb.post_mortem(tb)
-# sys.excepthook = debug_on_exception
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--local_rank", type=int, default=0)
 parser.add_argument("--ckpt_path", type=str, required=True)
@@ -77,10 +68,9 @@ def evaluate(
             output_scores=False,
         )
         output = generation_output.sequences[0]
-        output = tokenizer.decode(
-            output, 
-            skip_special_tokens=True
-        )[len(prompt):].strip()
+        output = tokenizer.decode(output, skip_special_tokens=True)[
+            len(prompt) :
+        ].strip()
         return output
 
 
@@ -109,7 +99,9 @@ if __name__ == "__main__":
         model.config.pad_token_id = 0
         model.config.eos_token_id = 2
     else:
-        model = AutoModelForCausalLM.from_pretrained(args.ckpt_path, torch_dtype=load_type)
+        model = AutoModelForCausalLM.from_pretrained(
+            args.ckpt_path, torch_dtype=load_type
+        )
 
     # peft model
     if args.use_lora:
@@ -124,7 +116,6 @@ if __name__ == "__main__":
     print(f"device: {device}")
     model.to(device)
     model.eval()
-    
 
     print("Load model successfully")
     # https://gradio.app/docs/

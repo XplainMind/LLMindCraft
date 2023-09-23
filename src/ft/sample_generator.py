@@ -163,14 +163,13 @@ def exam_generate(model_max_length: int, tokenizer: PreTrainedTokenizer, data_po
         "labels": labels,
     }
 
-
 def inference_generate(
     model_max_length: int,
     tokenizer: PreTrainedTokenizer,
     model_prompt: Callable,
     data_point: Dict[str, Any],
 ):
-    text = data_point["text"]
+    text = data_point['text']
     if model_prompt is not None:
         text = model_prompt(text)
     return {

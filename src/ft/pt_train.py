@@ -14,7 +14,6 @@ from datasets import load_dataset
 import transformers
 import torch
 from packaging import version
-
 from typing import Optional
 from functools import partial
 from dataclasses import dataclass, field
@@ -25,11 +24,9 @@ import json
 import sys
 
 from src.utils import get_model_param_count
-from src.ft.sample_generator import (
-    batch_grouped_sft_generate,
-    generate_and_tokenize_prompt,
-)
+from src.ft.sample_generator import batch_grouped_pretrain_generate
 from src.models.llama.modeling_llama import LlamaForCausalLM
+
 
 if version.parse(transformers.__version__) <= version.parse("4.30.2"):
     from src.ft.trainer import MyTrainer as Trainer
@@ -37,6 +34,7 @@ else:
     from transformers import Trainer
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class ModelArguments:
@@ -67,9 +65,6 @@ class ModelArguments:
             ),
             "choices": ["auto", "bfloat16", "float16", "float32"],
         },
-    )
-    use_flash_attention: bool = field(
-        default=False, metadata={"help": ("Whether to use memory efficient attention.")}
     )
     llama: bool = field(default=False, metadata={"help": "Llama model"})
 
@@ -236,7 +231,6 @@ def main():
                 model_args.model_name_or_path,
                 torch_dtype=torch_dtype,
             )
-            model.config.use_flash_attention = model_args.use_flash_attention
         else:
             model = AutoModelForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
@@ -329,58 +323,34 @@ def main():
             "json", data_files=data_args.validation_file, cache_dir=model_args.cache_dir
         )
 
-        if model_args.use_flash_attention:
-            train_data = (
-                train_data["train"]
-                .shuffle()
-                .map(
-                    partial(
-                        batch_grouped_sft_generate,
-                        training_args.model_max_length,
-                        tokenizer,
-                    ),
-                    batched=True,
-                    desc=f"Grouping texts in chunks of {training_args.model_max_length}",
-                    remove_columns=["id", "conversations"],
-                )
+        train_data = (
+            train_data["train"]
+            .shuffle()
+            .map(
+                partial(
+                    batch_grouped_pretrain_generate,
+                    training_args.model_max_length,
+                    tokenizer,
+                ),
+                batched=True,
+                desc=f"Grouping texts in chunks of {training_args.model_max_length}",
+                remove_columns="text",
             )
+        )
 
-            val_data = (
-                val_data["train"]
-                .map(
-                    partial(
-                        batch_grouped_sft_generate,
-                        training_args.model_max_length,
-                        tokenizer,
-                    ),
-                    batched=True,
-                    desc=f"Grouping texts in chunks of {training_args.model_max_length}",
-                    remove_columns=["id", "conversations"],
-                )
+        val_data = (
+            val_data["train"]
+            .map(
+                partial(
+                    batch_grouped_pretrain_generate,
+                    training_args.model_max_length,
+                    tokenizer,
+                ),
+                batched=True,
+                desc=f"Grouping texts in chunks of {training_args.model_max_length}",
+                remove_columns="text",
             )
-        else:
-            train_data = (
-                train_data["train"]
-                .shuffle()
-                .map(
-                    partial(
-                        generate_and_tokenize_prompt,
-                        training_args.model_max_length,
-                        tokenizer,
-                    )
-                )
-            )
-
-            val_data = (
-                val_data["train"]
-                .map(
-                    partial(
-                        generate_and_tokenize_prompt,
-                        training_args.model_max_length,
-                        tokenizer,
-                    )
-                )
-            )
+        )
 
     for i in range(2):
         print_rank_0(
@@ -499,8 +469,8 @@ def main():
     elif last_checkpoint is not None:
         checkpoint = last_checkpoint
     trainer.train(resume_from_checkpoint=checkpoint)
-    trainer.save_model(training_args.output_dir)
-    
+    if global_rank in [-1, 0]:
+        trainer.save_model(training_args.output_dir)
     print_rank_0(
         "\n Training completed!!! If there's a warning about missing keys above, please disregard :)",
         log_file,
