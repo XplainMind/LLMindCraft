@@ -15,14 +15,12 @@ from transformers import (
     AutoTokenizer,
     BitsAndBytesConfig,
     HfArgumentParser,
-    Trainer,
     PreTrainedTokenizerBase,
     LlamaTokenizer,
 )
 from transformers.utils import PaddingStrategy
 from transformers.trainer_utils import get_last_checkpoint
 from trl import RewardConfig, RewardTrainer
-from torch import nn
 import logging
 from multiprocessing import cpu_count
 
@@ -377,7 +375,7 @@ def main():
         trust_remote_code=script_args.trust_remote_code,
         num_labels=1,
     )
-    model.config.pad_token_id = 0
+    model.config.pad_token_id = tokenizer.pad_token_id
 
     # Define the LoraConfig
     if script_args.use_lora:

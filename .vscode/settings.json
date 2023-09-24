@@ -1,0 +1,8 @@
+{
+    "python.analysis.extraPaths": [
+        "/workspace/trl"
+    ],
+    "python.autoComplete.extraPaths": [
+        "/workspace/trl"
+    ]
+}

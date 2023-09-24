@@ -68,9 +68,10 @@ def evaluate(
             output_scores=False,
         )
         output = generation_output.sequences[0]
-        output = tokenizer.decode(output, skip_special_tokens=True)[
-            len(prompt) :
-        ].strip()
+        output = tokenizer.decode(
+            output, 
+            skip_special_tokens=True
+        )[len(prompt):].strip()
         return output
 
 
@@ -96,12 +97,10 @@ if __name__ == "__main__":
     if args.llama:
         model = LlamaForCausalLM.from_pretrained(args.ckpt_path, torch_dtype=load_type)
         model.config.use_flash_attention = True
-        model.config.pad_token_id = 0
-        model.config.eos_token_id = 2
     else:
-        model = AutoModelForCausalLM.from_pretrained(
-            args.ckpt_path, torch_dtype=load_type
-        )
+        model = AutoModelForCausalLM.from_pretrained(args.ckpt_path, torch_dtype=load_type)
+    model.config.pad_token_id = tokenizer.pad_token_id
+    model.config.eos_token_id = tokenizer.eos_token_id
 
     # peft model
     if args.use_lora:
@@ -116,6 +115,7 @@ if __name__ == "__main__":
     print(f"device: {device}")
     model.to(device)
     model.eval()
+    
 
     print("Load model successfully")
     # https://gradio.app/docs/
@@ -154,7 +154,7 @@ if __name__ == "__main__":
                 label="Output",
             )
         ],
-        title="LLMindCraft: Shaping Language Models with Cognitive Insights",
+        title="BELLE: Be Everyone's Large Language model Engine",
     ).queue().launch(
         share=True, server_name="0.0.0.0", server_port=args.base_port + args.local_rank
     )
