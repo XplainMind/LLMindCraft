@@ -1,8 +1,26 @@
-[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC_BY--NC--ND_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
+
 # LLMindCraft 
+
+[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC_BY--NC--ND_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
+
+
 Shaping Language Models with Cognitive Insights
 
-LLMindCraft by Nature Language Processing Lab of Wuhan University is licensed under CC BY-NC-ND 4.0. 
+LLMindCraft by **XplainMind** Lab is licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
+
+## Downstream Applications
+
+| Logo | Repository                 | Domain                            |  Paper |
+| ----- | --------------------- | -------------------------------- |------ |
+|[![](https://i.postimg.cc/xTpWgq3L/pixiu-logo.png)](https://github.com/chancefocus/PIXIU)|[https://github.com/chancefocus/PIXIU](https://github.com/chancefocus/PIXIU)|Finance|[1]|
+|[![](https://i.postimg.cc/J7Ds1tw6/CoLLaMA.jpg)](https://github.com/Denilah/CoLLaMA)|[https://github.com/Denilah/CoLLaMA](https://github.com/Denilah/CoLLaMA)|Code||
+|[![](https://i.postimg.cc/0Nd8VxbL/logo.png)](https://github.com/SteveKGYang/MentalLLaMA)|[https://github.com/SteveKGYang/MentalLLaMA](https://github.com/SteveKGYang/MentalLLaMA)|Mental Health | [2]|
+
+[1] Xie, Q., Han, W., Zhang, X., Lai, Y., Peng, M., Lopez-Lira, A. and Huang, J., 2023. PIXIU: A Large Language Model, Instruction Data and Evaluation Benchmark for Finance. arXiv preprint arXiv:2306.05443. **(Accepted by NeurIPS 2023 Dataset and Benchmark Track)**
+
+
+[2] Yang, K., Zhang, T., Kuang, Z., Xie, Q. and Ananiadou, S., 2023. MentalLLaMA: Interpretable Mental Health Analysis on Social Media with Large Language Models. arXiv preprint arXiv:2309.13567.
+
 
 ## Docker environment
 ```bash
