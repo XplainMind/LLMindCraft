@@ -15,6 +15,8 @@ LLMindCraft by **XplainMind** Lab is licensed under [CC BY-NC-ND 4.0](https://cr
 |[![](https://i.postimg.cc/xTpWgq3L/pixiu-logo.png)](https://github.com/chancefocus/PIXIU)|[https://github.com/chancefocus/PIXIU](https://github.com/chancefocus/PIXIU)|Finance|[1]|
 |[![](https://i.postimg.cc/J7Ds1tw6/CoLLaMA.jpg)](https://github.com/Denilah/CoLLaMA)|[https://github.com/Denilah/CoLLaMA](https://github.com/Denilah/CoLLaMA)|Code||
 |[![](https://i.postimg.cc/0Nd8VxbL/logo.png)](https://github.com/SteveKGYang/MentalLLaMA)|[https://github.com/SteveKGYang/MentalLLaMA](https://github.com/SteveKGYang/MentalLLaMA)|Mental Health | [2]|
+|[![]()]|[https://github.com/chenhan97/TimeLlama](https://github.com/chenhan97/TimeLlama)|Temporal Reasoning ||
+||[https://github.com/colfeng/CALM](https://github.com/colfeng/CALM)|Credit Scoring||
 
 [1] Xie, Q., Han, W., Zhang, X., Lai, Y., Peng, M., Lopez-Lira, A. and Huang, J., 2023. PIXIU: A Large Language Model, Instruction Data and Evaluation Benchmark for Finance. arXiv preprint arXiv:2306.05443. **(Accepted by NeurIPS 2023 Dataset and Benchmark Track)**
 
