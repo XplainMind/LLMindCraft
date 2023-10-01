@@ -3,6 +3,12 @@ LABEL maintainer="tothemoon"
 WORKDIR /workspace
 
 RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+RUN type -p curl >/dev/null || (apt update && apt install curl -y) \
+    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && apt update \
+    && apt install gh -y
 RUN apt update
 RUN apt install -y git-lfs
 RUN apt install -y htop
@@ -62,6 +68,12 @@ RUN cd /workspace && \
 RUN cd /workspace/transformers && \
     git pull && \
     python3 -m pip uninstall -y transformers && \
+    python3 -m pip install -e .
+
+RUN cd /workspace && \
+    git clone https://github.com/huggingface/peft.git && \
+    python3 -m pip uninstall -y peft && \
+    cd peft && \
     python3 -m pip install -e .
 
 RUN mkdir -p /scripts && echo -e '#!/bin/bash\n\
