@@ -76,6 +76,11 @@ RUN cd /workspace && \
     cd peft && \
     python3 -m pip install -e .
 
+RUN cd /workspace \
+    && git clone https://github.com/vllm-project/vllm.git \
+    && cd vllm \
+    && TORCH_CUDA_ARCH_LIST="7.0;7.5;8.6;8.9;9.0" pip install -e .
+
 RUN mkdir -p /scripts && echo -e '#!/bin/bash\n\
 SSHD_PORT=22001\n\
 CMD_TO_RUN=""\n\
