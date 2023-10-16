@@ -17,7 +17,7 @@ LLMindCraft by **XplainMind** Lab is licensed under [CC BY-NC-ND 4.0](https://cr
 |[![](https://i.postimg.cc/0Nd8VxbL/logo.png)](https://github.com/SteveKGYang/MentalLLaMA)|[https://github.com/SteveKGYang/MentalLLaMA](https://github.com/SteveKGYang/MentalLLaMA)|Mental Health | [2]|
 |[![](https://camo.githubusercontent.com/a1d8cf8dd52e8e85481b729c0590154436afe23364f935afe4cf905e82d79be0/68747470733a2f2f692e706f7374696d672e63632f634a4e374c4b59302f6c6f676f2e706e67)](https://github.com/chenhan97/TimeLlama)|[https://github.com/chenhan97/TimeLlama](https://github.com/chenhan97/TimeLlama)|Temporal Reasoning |[3]|
 ||[https://github.com/colfeng/CALM](https://github.com/colfeng/CALM)|Credit Scoring|[4]|
-||[https://github.com/Dai-shen/LAiW](https://github.com/Dai-shen/LAiW)|Legal||
+||[https://github.com/Dai-shen/LAiW](https://github.com/Dai-shen/LAiW)|Legal|[5]|
 
 
 
@@ -29,6 +29,8 @@ LLMindCraft by **XplainMind** Lab is licensed under [CC BY-NC-ND 4.0](https://cr
 [3] Yuan, C., Xie, Q., Huang, J. and Ananiadou, S., 2018. Back to the Future: Towards Explainable Temporal Reasoning with Large Language Models.
 
 [4] Feng, D., Dai, Y., Huang, J., Zhang, Y., Xie, Q., Han, W., Lopez-Lira, A. and Wang, H., 2023. Empowering Many, Biasing a Few: Generalist Credit Scoring through Large Language Models. arXiv preprint arXiv:2310.00566.
+
+[5] Dai, Y., Feng, D., Huang, J., Jia, H., Xie, Q., Zhang, Y., Han, W., Tian, W. and Wang, H., 2023. LAiW: A Chinese Legal Large Language Models Benchmark (A Technical Report). arXiv preprint arXiv:2310.05620.
 
 ## Docker environment
 ```bash
