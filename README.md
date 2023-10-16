@@ -30,30 +30,25 @@ LLMindCraft by **XplainMind** Lab is licensed under [CC BY-NC-ND 4.0](https://cr
 
 [4] Feng, D., Dai, Y., Huang, J., Zhang, Y., Xie, Q., Han, W., Lopez-Lira, A. and Wang, H., 2023. Empowering Many, Biasing a Few: Generalist Credit Scoring through Large Language Models. arXiv preprint arXiv:2310.00566.
 
-
-
 ## Docker environment
 ```bash
 docker pull tothemoon/llm
 ```
-This image packages all environments of LLMindCraft. You can start the image by following command:
-```
-docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
-    --privileged \
-    --network host \
-    [--env env_variable=value] \
+This image packages all environments of LLMindCraft. 
+
+## Fine-tuning in Docker environment
+
+```bash
+docker run --gpus all 
     -d --rm \
     --name llm \
     [-v host_path:container_path] \
-    [-v ssh_pub_key:/root/.ssh/authorized_keys] \
     [-w workdir] \
+    --entrypoint "/bin/bash -c" \
     tothemoon/llm \
-    --sshd_port [any_port] --cmd "sleep infinity"
+    --cmd "sleep infinity"
 ```
-The entry point of the container starts a sshd process, then it `sleep infinity`, so you can work in container by ssh connection.
-```bash
-ssh -p [any_port] -i [private_key] root@host_ip
-```
+
 You can also enter the container by
 ```bash
 docker exec -it llm /bin/bash
