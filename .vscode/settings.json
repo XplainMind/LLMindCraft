@@ -1,8 +1,10 @@
 {
     "python.analysis.extraPaths": [
-        "/workspace/trl"
+        "/workspace/trl",
+        "third_party/Megatron-DeepSpeed"
     ],
     "python.autoComplete.extraPaths": [
-        "/workspace/trl"
+        "/workspace/trl",
+        "third_party/Megatron-DeepSpeed"
     ]
 }
