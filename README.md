@@ -39,9 +39,9 @@ docker pull tothemoon/llm
 This image packages all environments of LLMindCraft. 
 
 ## Fine-tuning in Docker environment
-
+For **single node**:
 ```bash
-docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
+docker run --gpus all \
     -d --rm \
     --name llm \
     [-v host_path:container_path] \
@@ -49,6 +49,20 @@ docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
     --entrypoint "/bin/bash -c" \
     tothemoon/llm \
     --cmd "sleep infinity"
+```
+while for **multiple nodes**:
+```bash
+docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
+    --privileged \
+    --network host \
+    [--env env_variable=value] \
+    -d --rm \
+    --name llm \
+    [-v host_path:container_path] \
+    [-v ssh_pub_key:/root/.ssh/authorized_keys] \
+    [-w workdir] \
+    tothemoon/llm \
+    --sshd_port [any_port] --cmd "sleep infinity"
 ```
 
 You can also enter the container by
