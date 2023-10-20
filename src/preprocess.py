@@ -92,12 +92,12 @@ DATASETS = {
 def main():
     parser = argparse.ArgumentParser(description='Process dataset for hippocrates training and evaluation.')
 
-    parser.add_argument('-dataset', type=str, required=True, help='The dataset name')
-    parser.add_argument('-train_filename', type=str, required=True, help='The training dataset filename')
-    parser.add_argument('-valid_filename', type=str, required=True, help='The validation dataset filename')
-    parser.add_argument('-test_filename', type=str, required=True, help='The test dataset filename')
-    parser.add_argument('-for_eval', action='store_true', help='Set to true for evaluation, false otherwise')
-    parser.add_argument('-limit', type=int, help='The generation number of the dataset')
+    parser.add_argument('--dataset', type=str, required=True, help='The dataset name')
+    parser.add_argument('--train_filename', type=str, required=True, help='The training dataset filename')
+    parser.add_argument('--valid_filename', type=str, required=True, help='The validation dataset filename')
+    parser.add_argument('--test_filename', type=str, required=True, help='The test dataset filename')
+    parser.add_argument('--for_eval', action='store_true', help='Set to true for evaluation, false otherwise')
+    parser.add_argument('--limit', type=int, help='The generation number of the dataset')
 
     args = parser.parse_args()
 
