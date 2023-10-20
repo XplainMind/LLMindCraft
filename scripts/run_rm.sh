@@ -2,7 +2,7 @@ export CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
 gpus=8
 
 PROJECT_PATH="..."
-export PYTHONPATH="$PROJECT_PATH/src"
+export PYTHONPATH="$PROJECT_PATH"
 
 export WANDB_PROJECT=...
 export WANDB_RUN_ID=...
