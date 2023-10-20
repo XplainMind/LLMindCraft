@@ -1,5 +1,5 @@
 export ABS_PATH=...
-export PYTHONPATH="$ABS_PATH/src"
+export PYTHONPATH="$ABS_PATH"
 export CUDA_VISIBLE_DEVICES='0,1,2,3,4,5,6,7'
 
 ckpt_path=...
