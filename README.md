@@ -41,7 +41,7 @@ This image packages all environments of LLMindCraft.
 ## Fine-tuning in Docker environment
 
 ```bash
-docker run --gpus all 
+docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
     -d --rm \
     --name llm \
     [-v host_path:container_path] \
