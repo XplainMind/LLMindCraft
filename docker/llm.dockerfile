@@ -40,8 +40,8 @@ RUN OS_VER="ubuntu$(lsb_release -rs)" \
     && tar -xvf MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}.tgz \
     && MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}/mlnxofedinstall --user-space-only --without-fw-update -q
 
+RUN python3 -m pip install -U --no-cache-dir setuptools
 RUN python3 -m pip install -U --no-cache-dir pip
-RUN python3 -m pip install -U --no-cache-dir peft
 RUN python3 -m pip install -U --no-cache-dir gradio
 RUN python3 -m pip install -U --no-cache-dir pudb
 RUN python3 -m pip install -U --no-cache-dir xformers
