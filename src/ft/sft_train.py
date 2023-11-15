@@ -1,42 +1,49 @@
-from transformers.utils import add_start_docstrings
-from transformers.trainer_utils import get_last_checkpoint
-from transformers.trainer_pt_utils import torch_distributed_zero_first
-from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    HfArgumentParser,
-    LlamaTokenizer,
-    TrainingArguments,
-    set_seed,
-)
-from peft import LoraConfig, get_peft_model, prepare_model_for_int8_training
-from datasets import load_dataset
-import transformers
-import torch
-from packaging import version
-
-from typing import Optional
-from functools import partial
-from dataclasses import dataclass, field
-import os
-import math
-import logging
 import json
+import logging
+import math
+from multiprocessing import cpu_count
+import os
 import sys
+from dataclasses import dataclass, field
+from functools import partial
+from typing import Optional
 
-from src.utils import get_model_param_count
+import torch
+import transformers
+from datasets import load_dataset
+from peft import LoraConfig, get_peft_model, prepare_model_for_int8_training
 from src.ft.sample_generator import (
     batch_grouped_sft_generate,
     generate_and_tokenize_prompt,
 )
-from src.models.llama.modeling_llama import LlamaForCausalLM
-
-if version.parse(transformers.__version__) <= version.parse("4.30.2"):
-    from src.ft.trainer import MyTrainer as Trainer
-else:
-    from transformers import Trainer
+from src.utils import get_model_param_count
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    HfArgumentParser,
+    LlamaConfig,
+    LlamaForCausalLM,
+    LlamaTokenizer,
+    TrainingArguments,
+    set_seed,
+    Trainer
+)
+from transformers.trainer_pt_utils import torch_distributed_zero_first
+from transformers.trainer_utils import get_last_checkpoint
+from transformers.utils import add_start_docstrings
 
 logger = logging.getLogger(__name__)
+
+# if int(getattr(os.environ, 'rank', -1)) in [-1, 0]:
+#     import sys
+#     import traceback
+#     import pudb
+#     # 异常时中断
+#     def debug_on_exception(exctype, value, tb):
+#         traceback.print_exception(exctype, value, tb)
+#         pudb.post_mortem(tb)
+#     sys.excepthook = debug_on_exception
+
 
 @dataclass
 class ModelArguments:
@@ -212,6 +219,26 @@ def main():
     training_args._frozen = False
     training_args.data_seed = training_args.seed
 
+    if model_args.llama:
+        tokenizer = LlamaTokenizer.from_pretrained(model_args.model_name_or_path)
+        print_rank_0(
+            "Set the eos_token_id and bos_token_id of LLama model tokenizer",
+            log_file,
+            global_rank,
+        )
+        tokenizer.add_special_tokens(
+            {
+                "bos_token": "<s>",
+                "eos_token": "</s>",
+                "unk_token": "<unk>",
+                "pad_token": "<unk>",
+            }
+        )
+    else:
+        tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path)
+        tokenizer.add_special_tokens({"pad_token": tokenizer.unk_token})
+    tokenizer.padding_side = "left"  # Allow batched inference
+
     torch_dtype = (
         model_args.torch_dtype
         if model_args.torch_dtype in ["auto", None]
@@ -232,29 +259,18 @@ def main():
         )
     else:
         if model_args.llama:
+            config = LlamaConfig(model_args.model_name_or_path)
+            config.vocab_size = tokenizer.vocab_size
+            config.pad_token_id = tokenizer.pad_token_id
+            config._flash_attn_2_enabled = model_args.use_flash_attention
             model = LlamaForCausalLM.from_pretrained(
-                model_args.model_name_or_path,
-                torch_dtype=torch_dtype,
+                model_args.model_name_or_path, torch_dtype=torch_dtype, config=config
             )
-            model.config.use_flash_attention = model_args.use_flash_attention
         else:
             model = AutoModelForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
                 torch_dtype=torch_dtype,
             )
-
-    if model_args.llama:
-        tokenizer = LlamaTokenizer.from_pretrained(model_args.model_name_or_path)
-        print_rank_0(
-            "Set the eos_token_id and bos_token_id of LLama model tokenizer",
-            log_file,
-            global_rank,
-        )
-        tokenizer.add_special_tokens({'bos_token': '<s>', 'eos_token': '</s>', 'unk_token': '<unk>', 'pad_token': '<unk>'})
-    else:
-        tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path)
-        tokenizer.add_special_tokens({"pad_token": tokenizer.unk_token})
-    tokenizer.padding_side = "left"  # Allow batched inference
 
     print_rank_0(
         "tokenizer.eos_token_id = {}".format(tokenizer.eos_token_id),
@@ -342,21 +358,20 @@ def main():
                     batched=True,
                     desc=f"Grouping texts in chunks of {training_args.model_max_length}",
                     remove_columns=["id", "conversations"],
+                    num_proc=cpu_count(),
                 )
             )
 
-            val_data = (
-                val_data["train"]
-                .map(
-                    partial(
-                        batch_grouped_sft_generate,
-                        training_args.model_max_length,
-                        tokenizer,
-                    ),
-                    batched=True,
-                    desc=f"Grouping texts in chunks of {training_args.model_max_length}",
-                    remove_columns=["id", "conversations"],
-                )
+            val_data = val_data["train"].map(
+                partial(
+                    batch_grouped_sft_generate,
+                    training_args.model_max_length,
+                    tokenizer,
+                ),
+                batched=True,
+                desc=f"Grouping texts in chunks of {training_args.model_max_length}",
+                remove_columns=["id", "conversations"],
+                num_proc=cpu_count(),
             )
         else:
             train_data = (
@@ -367,19 +382,18 @@ def main():
                         generate_and_tokenize_prompt,
                         training_args.model_max_length,
                         tokenizer,
-                    )
+                    ),
+                    num_proc=cpu_count(),
                 )
             )
 
-            val_data = (
-                val_data["train"]
-                .map(
-                    partial(
-                        generate_and_tokenize_prompt,
-                        training_args.model_max_length,
-                        tokenizer,
-                    )
-                )
+            val_data = val_data["train"].map(
+                partial(
+                    generate_and_tokenize_prompt,
+                    training_args.model_max_length,
+                    tokenizer,
+                ),
+                num_proc=cpu_count(),
             )
 
     for i in range(2):
@@ -499,7 +513,7 @@ def main():
     elif last_checkpoint is not None:
         checkpoint = last_checkpoint
     trainer.train(resume_from_checkpoint=checkpoint)
-    trainer.save_model(training_args.output_dir)    
+    trainer.save_model(training_args.output_dir)
     print_rank_0(
         "\n Training completed!!! If there's a warning about missing keys above, please disregard :)",
         log_file,

@@ -38,10 +38,12 @@ ENV PLATFORM=x86_64
 RUN OS_VER="ubuntu$(lsb_release -rs)" \
     && wget http://content.mellanox.com/ofed/MLNX_OFED-${MOFED_VER}/MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}.tgz \
     && tar -xvf MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}.tgz \
-    && MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}/mlnxofedinstall --user-space-only --without-fw-update -q
+    && rm -rf MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}.tgz \
+    && MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}/mlnxofedinstall --user-space-only --without-fw-update -q \
+    && rm -rf MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}
 
+RUN python3 -m pip install -U --no-cache-dir setuptools
 RUN python3 -m pip install -U --no-cache-dir pip
-RUN python3 -m pip install -U --no-cache-dir peft
 RUN python3 -m pip install -U --no-cache-dir gradio
 RUN python3 -m pip install -U --no-cache-dir pudb
 RUN python3 -m pip install -U --no-cache-dir xformers
@@ -76,10 +78,10 @@ RUN cd /workspace && \
     cd peft && \
     python3 -m pip install -e .
 
-RUN cd /workspace \
-    && git clone https://github.com/vllm-project/vllm.git \
-    && cd vllm \
-    && TORCH_CUDA_ARCH_LIST="7.0;7.5;8.6;8.9;9.0" pip install -e .
+# RUN cd /workspace \
+#     && git clone https://github.com/vllm-project/vllm.git \
+#     && cd vllm \
+#     && TORCH_CUDA_ARCH_LIST="7.0;7.5;8.6;8.9;9.0" pip install -e .
 
 RUN mkdir -p /scripts && echo -e '#!/bin/bash\n\
 SSHD_PORT=22001\n\
