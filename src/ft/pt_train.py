@@ -28,7 +28,9 @@ from transformers import (
 from transformers.trainer_pt_utils import torch_distributed_zero_first
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import add_start_docstrings
+from rich.traceback import install
 
+install(show_locals=False)
 logger = logging.getLogger(__name__)
 
 

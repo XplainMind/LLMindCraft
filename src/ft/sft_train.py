@@ -26,12 +26,14 @@ from transformers import (
     LlamaTokenizer,
     TrainingArguments,
     set_seed,
-    Trainer
+    Trainer,
 )
 from transformers.trainer_pt_utils import torch_distributed_zero_first
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import add_start_docstrings
+from rich.traceback import install
 
+install(show_locals=False)
 logger = logging.getLogger(__name__)
 
 # if int(getattr(os.environ, 'rank', -1)) in [-1, 0]:
@@ -95,6 +97,12 @@ class DataArguments:
         metadata={
             "help": "An optional input evaluation data file to evaluate the perplexity on (a text file)."
         },
+    )
+    group_sample: bool = field(
+        default=False,
+        metadata={
+            "help": "Whether group instructions as pretraining stage."
+        }
     )
 
 
@@ -345,7 +353,7 @@ def main():
             "json", data_files=data_args.validation_file, cache_dir=model_args.cache_dir
         )
 
-        if model_args.use_flash_attention:
+        if data_args.group_sample:
             train_data = (
                 train_data["train"]
                 .shuffle()

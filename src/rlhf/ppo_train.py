@@ -23,7 +23,9 @@ from trl.core import LengthSampler
 from multiprocessing import cpu_count
 from src.utils import prepare_deepspeed, zero_infer
 from src.rlhf.ppo_trainer import PPOTrainerForZero3 as PPOTrainer
+from rich.traceback import install
 
+install(show_locals=False)
 accelerator = Accelerator()
 
 tqdm.pandas()

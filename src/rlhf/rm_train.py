@@ -24,7 +24,9 @@ from trl import RewardConfig, RewardTrainer
 from trl.trainer.utils import RewardDataCollatorWithPadding
 import logging
 from multiprocessing import cpu_count
+from rich.traceback import install
 
+install(show_locals=False)
 tqdm.pandas()
 accelerator = Accelerator()
 # Setup logging
@@ -174,6 +176,7 @@ def preprocess_function(tokenizer: PreTrainedTokenizerBase, examples: Dict[str, 
         )
 
     return new_examples
+
 
 def main():
     parser = HfArgumentParser(ScriptArguments)
