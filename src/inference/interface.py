@@ -8,8 +8,8 @@ from transformers import (
     AutoTokenizer,
     GenerationConfig,
     LlamaTokenizer,
+    LlamaForCausalLM
 )
-from src.models.llama.modeling_llama import LlamaForCausalLM
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--local_rank", type=int, default=0)

@@ -9,6 +9,7 @@ import torch
 
 from trl import DPOTrainer
 
+
 class CustomDPOTrainer(DPOTrainer):
     def get_batch_metrics(
         self,
@@ -64,10 +65,14 @@ class CustomDPOTrainer(DPOTrainer):
         metrics[f"{prefix}rewards/chosen"] = chosen_rewards.cpu().mean()
         metrics[f"{prefix}rewards/rejected"] = rejected_rewards.cpu().mean()
         metrics[f"{prefix}rewards/accuracies"] = reward_accuracies.cpu().mean()
-        metrics[f"{prefix}rewards/margins"] = (chosen_rewards - rejected_rewards).cpu().mean()
+        metrics[f"{prefix}rewards/margins"] = (
+            (chosen_rewards - rejected_rewards).cpu().mean()
+        )
         metrics[f"{prefix}logps/rejected"] = policy_rejected_logps.detach().cpu().mean()
         metrics[f"{prefix}logps/chosen"] = policy_chosen_logps.detach().cpu().mean()
-        metrics[f"{prefix}logits/rejected"] = policy_rejected_logits.detach().cpu().mean()
+        metrics[f"{prefix}logits/rejected"] = (
+            policy_rejected_logits.detach().cpu().mean()
+        )
         metrics[f"{prefix}logits/chosen"] = policy_chosen_logits.detach().cpu().mean()
 
         return losses.mean(), metrics
@@ -115,8 +120,10 @@ class CustomDPOTrainer(DPOTrainer):
         # logits = torch.stack(logits).mean(axis=1)
         # labels = torch.zeros(logits.shape[0])
         # custom rectified
-        logits = tuple(v.unsqueeze(dim=0) for k, v in logits_dict.items() if k not in ignore_keys)
+        logits = tuple(
+            v.unsqueeze(dim=0) for k, v in logits_dict.items() if k not in ignore_keys
+        )
         logits = torch.stack(logits).mean(axis=1).to(model.device)
-        labels = torch.tensor([0.]).to(model.device)
+        labels = torch.tensor([0.0]).to(model.device)
 
         return (loss.detach(), logits, labels)
