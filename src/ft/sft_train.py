@@ -259,7 +259,7 @@ def main():
         )
     else:
         if model_args.llama:
-            config = LlamaConfig(model_args.model_name_or_path)
+            config = LlamaConfig.from_pretrained(model_args.model_name_or_path)
             config.vocab_size = tokenizer.vocab_size
             config.pad_token_id = tokenizer.pad_token_id
             config._flash_attn_2_enabled = model_args.use_flash_attention
