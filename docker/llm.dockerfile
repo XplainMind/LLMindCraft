@@ -10,6 +10,7 @@ RUN type -p curl >/dev/null || (apt update && apt install curl -y) \
     && apt update \
     && apt install gh -y
 RUN apt update
+RUN apt install -y netcat
 RUN apt install -y git-lfs
 RUN apt install -y htop
 RUN apt install -y screen
