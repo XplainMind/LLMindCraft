@@ -34,9 +34,9 @@ RUN apt install -y pdsh \
 
 # https://docs.nvidia.com/networking/m/view-rendered-page.action?abstractPageId=15049785
 # https://network.nvidia.com/products/infiniband-drivers/linux/mlnx_ofed/
-ENV MOFED_VER=23.07-0.5.0.0
+ENV MOFED_VER=23.10-1.1.9.0
 ENV PLATFORM=x86_64
-RUN OS_VER="ubuntu$(lsb_release -rs)" \
+RUN OS_VER="ubuntu$(cat /etc/os-release | grep VERSION_ID | cut -d '"' -f 2)" \
     && wget http://content.mellanox.com/ofed/MLNX_OFED-${MOFED_VER}/MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}.tgz \
     && tar -xvf MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}.tgz \
     && rm -rf MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}.tgz \
