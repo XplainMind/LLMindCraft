@@ -39,10 +39,12 @@ ENV PLATFORM=x86_64
 RUN OS_VER="ubuntu$(cat /etc/os-release | grep VERSION_ID | cut -d '"' -f 2)" \
     && wget http://content.mellanox.com/ofed/MLNX_OFED-${MOFED_VER}/MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}.tgz \
     && tar -xvf MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}.tgz \
-    && rm -rf MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}.tgz \
+    && rm -rf MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}.tgz
+RUN OS_VER="ubuntu$(cat /etc/os-release | grep VERSION_ID | cut -d '"' -f 2)" \
     && MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}/mlnxofedinstall --user-space-only --without-fw-update -q \
     && rm -rf MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}
 
+RUN python3 -m pip install -U --no-cache-dir tiktoken
 RUN python3 -m pip install -U --no-cache-dir setuptools
 RUN python3 -m pip install -U --no-cache-dir pip
 RUN python3 -m pip install -U --no-cache-dir gradio
@@ -78,11 +80,6 @@ RUN cd /workspace && \
     python3 -m pip uninstall -y peft && \
     cd peft && \
     python3 -m pip install -e .
-
-# RUN cd /workspace \
-#     && git clone https://github.com/vllm-project/vllm.git \
-#     && cd vllm \
-#     && TORCH_CUDA_ARCH_LIST="7.0;7.5;8.6;8.9;9.0" pip install -e .
 
 RUN mkdir -p /scripts && echo -e '#!/bin/bash\n\
 SSHD_PORT=22001\n\

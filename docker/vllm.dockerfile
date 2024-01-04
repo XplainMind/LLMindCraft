@@ -1,0 +1,7 @@
+FROM nvcr.io/nvidia/pytorch:23.11-py3
+
+WORKDIR /workspace
+RUN cd /workspace \
+    && git clone https://github.com/vllm-project/vllm.git \
+    && cd vllm \
+    && TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6;8.9;9.0" pip install -e .
