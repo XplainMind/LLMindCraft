@@ -31,8 +31,9 @@ RUN apt install -y pdsh \
     && chmod 755 /usr/lib/x86_64-linux-gnu/pdsh \
     && chown root:root /usr/lib \
     && chmod 755 /usr/lib
+RUN apt install -y bash-completion
+RUN apt install -y socat
 
-# https://docs.nvidia.com/networking/m/view-rendered-page.action?abstractPageId=15049785
 # https://network.nvidia.com/products/infiniband-drivers/linux/mlnx_ofed/
 ENV MOFED_VER=23.10-1.1.9.0
 ENV PLATFORM=x86_64
@@ -40,24 +41,34 @@ RUN OS_VER="ubuntu$(cat /etc/os-release | grep VERSION_ID | cut -d '"' -f 2)" \
     && wget http://content.mellanox.com/ofed/MLNX_OFED-${MOFED_VER}/MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}.tgz \
     && tar -xvf MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}.tgz \
     && rm -rf MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}.tgz
-RUN apt install -y libnvidia-compute-535
 RUN OS_VER="ubuntu$(cat /etc/os-release | grep VERSION_ID | cut -d '"' -f 2)" \
     && MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}/mlnxofedinstall --user-space-only --without-fw-update -q \
     && rm -rf MLNX_OFED_LINUX-${MOFED_VER}-${OS_VER}-${PLATFORM}
 
+RUN pip install -U --no-cache-dir pip
 RUN python3 -m pip install -U --no-cache-dir tiktoken
 RUN python3 -m pip install -U --no-cache-dir setuptools
 RUN python3 -m pip install -U --no-cache-dir pip
 RUN python3 -m pip install -U --no-cache-dir gradio
 RUN python3 -m pip install -U --no-cache-dir pudb
-RUN python3 -m pip install -U --no-cache-dir xformers
+RUN python3 -m pip install -U --no-cache-dir xformers --index-url https://download.pytorch.org/whl/cu118
 RUN python3 -m pip install -U --no-cache-dir bitsandbytes
 RUN python3 -m pip install -U --no-build-isolation --no-cache-dir flash-attn
-RUN python3 -m pip install -U --no-cache-dir install git+https://github.com/wookayin/gpustat.git@master
+RUN git clone https://github.com/Dao-AILab/flash-attention.git \
+    && cd flash-attention/csrc/layer_norm \
+    && python3 -m pip install .
+RUN python3 -m pip install -U --no-cache-dir install git+https://github.com/wookayin/gpustat.git@master \
+    && pip uninstall -y nvidia-ml-py3 pynvml \
+    && pip install --force-reinstall --ignore-installed 'nvidia-ml-py'
 RUN python3 -m pip install -U --no-cache-dir ipykernel
 RUN python3 -m pip install -U --no-cache-dir ipywidgets
 RUN python3 -m pip install -U --no-cache-dir httpx[socks]
 RUN python3 -m pip install -U --no-cache-dir wandb
+RUN python3 -m pip install -U --no-cache-dir openpyxl
+RUN python3 -m pip install -U --no-cache-dir jsonlines 
+RUN python3 -m pip install -U --no-cache-dir transformers-stream-generator 
+RUN python3 -m pip install -U --no-cache-dir tiktoken
+RUN python3 -m pip install -U --no-cache-dir fire 
 
 RUN cd /workspace && \
     git clone https://github.com/huggingface/accelerate.git && \
@@ -81,6 +92,22 @@ RUN cd /workspace && \
     python3 -m pip uninstall -y peft && \
     cd peft && \
     python3 -m pip install -e .
+
+# vim
+RUN wget -O /root/.vimrc 'https://api.onedrive.com/v1.0/shares/u!aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBc01LbTN0MEszbFlnWlZsc0JJM1hhTGR3bWNJNHc/root/content' \
+    && git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim \
+    && vim +PluginInstall +qall
+
+# pudb
+RUN mkdir -p /root/.config/pudb \
+    && wget -O /root/.config/pudb/pudb.cfg 'https://api.onedrive.com/v1.0/shares/u!aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBc01LbTN0MEszbFlnWlZrQjlYNDQtTEJHWnoxVVE/root/content'
+
+# htop
+RUN mkdir -p /root/.config/htop \
+    && wget -O /root/.config/htop/htoprc 'https://api.onedrive.com/v1.0/shares/u!aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBc01LbTN0MEszbFlnWllUeHZqZUMyb2N0MzVKZlE/root/content'
+
+# screenrc
+RUN echo 'termcapinfo xterm* ti@:te@' > /root/.screenrc
 
 RUN mkdir -p /scripts && echo -e '#!/bin/bash\n\
 SSHD_PORT=22001\n\

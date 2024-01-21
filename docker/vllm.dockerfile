@@ -1,5 +1,9 @@
 FROM nvcr.io/nvidia/pytorch:23.11-py3
 
+RUN pip install -U --no-cache-dir pip
+RUN python3 -m pip install -U --no-cache-dir transformers-stream-generator 
+RUN python3 -m pip install -U --no-cache-dir tiktoken 
+
 WORKDIR /workspace
 RUN cd /workspace \
     && git clone https://github.com/vllm-project/vllm.git \
