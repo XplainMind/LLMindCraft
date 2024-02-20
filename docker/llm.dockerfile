@@ -53,10 +53,10 @@ RUN python3 -m pip install -U --no-cache-dir gradio
 RUN python3 -m pip install -U --no-cache-dir pudb
 RUN python3 -m pip install -U --no-cache-dir xformers --index-url https://download.pytorch.org/whl/cu118
 RUN python3 -m pip install -U --no-cache-dir bitsandbytes
-RUN python3 -m pip install -U --no-build-isolation --no-cache-dir flash-attn
+RUN MAX_JOBS=4 python3 -m pip install -U --no-build-isolation --no-cache-dir flash-attn
 RUN git clone https://github.com/Dao-AILab/flash-attention.git \
     && cd flash-attention/csrc/layer_norm \
-    && python3 -m pip install .
+    && MAX_JOBS=4 python3 -m pip install .
 RUN python3 -m pip install -U --no-cache-dir install git+https://github.com/wookayin/gpustat.git@master \
     && pip uninstall -y nvidia-ml-py3 pynvml \
     && pip install --force-reinstall --ignore-installed 'nvidia-ml-py'
@@ -149,4 +149,4 @@ else\n\
   /bin/bash\n\
 fi' > /scripts/startup.sh && chmod +x /scripts/startup.sh
 
-ENTRYPOINT ["/bin/bash", "/scripts/startup.sh"]
+CMD ["/bin/bash", "/scripts/startup.sh"]
