@@ -57,7 +57,7 @@ RUN apt install -y fuse
 
 RUN pip install -U --no-cache-dir pip
 RUN pip install -U --no-cache-dir setuptools
-# 可能影响torch版本，进而影响nccl版本
+# 可能影响pytorch版本，进而影响nccl版本
 RUN pip install -U --no-cache-dir --no-deps xformers==0.0.22.post7 --index-url https://download.pytorch.org/whl/cu121
 # RUN pip download xformers==0.0.22.post7 --no-deps --index-url https://download.pytorch.org/whl/cu121 \
 #     && XFORMERS_WHL=$(ls xformers-*.whl) \
@@ -70,16 +70,17 @@ RUN pip install -U --no-cache-dir --no-deps xformers==0.0.22.post7 --index-url h
 #     && rm -r xformers_package \
 #     && pip install $XFORMERS_WHL --no-cache-dir \
 #     && rm $XFORMERS_WHL
-
-RUN MAX_JOBS=4 pip install -U --no-build-isolation --no-cache-dir flash-attn
+# 依赖pytorch，需要重新编译
 RUN git clone https://github.com/Dao-AILab/flash-attention.git \
+    && cd flash-attention \
+    && MAX_JOBS=1 python setup.py install    
+RUN cd flash-attention \
     && cd flash-attention/csrc/layer_norm \
-    && MAX_JOBS=4 pip install .
+    && MAX_JOBS=1 pip install .
 RUN pip install -U --no-cache-dir bitsandbytes
 
 RUN pip install -U --no-cache-dir gradio
 RUN pip install -U --no-cache-dir pudb
-
 RUN pip install -U --no-cache-dir install git+https://github.com/wookayin/gpustat.git@master \
     && pip uninstall -y nvidia-ml-py3 pynvml \
     && pip install --force-reinstall --ignore-installed 'nvidia-ml-py'
