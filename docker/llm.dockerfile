@@ -73,10 +73,10 @@ RUN pip install -U --no-cache-dir --no-deps xformers==0.0.22.post7 --index-url h
 # 依赖pytorch，需要重新编译
 RUN git clone https://github.com/Dao-AILab/flash-attention.git \
     && cd flash-attention \
-    && MAX_JOBS=1 python setup.py install    
-RUN cd flash-attention \
-    && cd flash-attention/csrc/layer_norm \
-    && MAX_JOBS=1 pip install .
+    && git checkout v2.5.4 \
+    && MAX_JOBS=128 python setup.py install    
+RUN cd flash-attention/csrc/layer_norm \
+    && MAX_JOBS=128 pip install .
 RUN pip install -U --no-cache-dir bitsandbytes
 
 RUN pip install -U --no-cache-dir gradio
