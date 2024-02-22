@@ -18,7 +18,7 @@ LLMindCraft by **XplainMind** Lab is licensed under [CC BY-NC-ND 4.0](https://cr
 |[![](https://camo.githubusercontent.com/a1d8cf8dd52e8e85481b729c0590154436afe23364f935afe4cf905e82d79be0/68747470733a2f2f692e706f7374696d672e63632f634a4e374c4b59302f6c6f676f2e706e67)](https://github.com/chenhan97/TimeLlama)|[https://github.com/chenhan97/TimeLlama](https://github.com/chenhan97/TimeLlama)|Temporal Reasoning |[3]|
 ||[https://github.com/colfeng/CALM](https://github.com/colfeng/CALM)|Credit Scoring|[4]|
 ||[https://github.com/Dai-shen/LAiW](https://github.com/Dai-shen/LAiW)|Legal|[5]|
-|[![](https://github.com/zhiweihu1103/AgriMa/blob/main/pics/logo.jpg)|[https://github.com/zhiweihu1103/AgriMa](https://github.com/zhiweihu1103/AgriMa)||
+|[![](https://github.com/zhiweihu1103/AgriMa/blob/main/pics/logo.jpg)|[https://github.com/zhiweihu1103/AgriMa](https://github.com/zhiweihu1103/AgriMa)|Agriculture||
 
 
 
