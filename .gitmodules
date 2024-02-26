@@ -1,3 +1,4 @@
 [submodule "third_party/Megatron-DeepSpeed"]
 	path = third_party/Megatron-DeepSpeed
-	url = https://github.com/microsoft/Megatron-DeepSpeed.git
+	url = https://github.com/tothemoon96/Megatron-DeepSpeed.git
+	branch = main
