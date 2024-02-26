@@ -57,26 +57,23 @@ RUN apt install -y fuse
 
 RUN pip install -U --no-cache-dir pip
 RUN pip install -U --no-cache-dir setuptools
-# 可能影响pytorch版本，进而影响nccl版本
-RUN pip install -U --no-cache-dir --no-deps xformers==0.0.22.post7 --index-url https://download.pytorch.org/whl/cu121
-# RUN pip download xformers==0.0.22.post7 --no-deps --index-url https://download.pytorch.org/whl/cu121 \
-#     && XFORMERS_WHL=$(ls xformers-*.whl) \
-#     && unzip $XFORMERS_WHL -d xformers_package \
-#     && rm $XFORMERS_WHL \
-#     && sed -i 's/torch ==2.1.0/torch ==2.1.0a0+fe05266f/g' xformers_package/xformers-0.0.22.post7.dist-info/METADATA \
-#     && cd xformers_package \
-#     && zip -r ../$XFORMERS_WHL * \
-#     && cd .. \
-#     && rm -r xformers_package \
-#     && pip install $XFORMERS_WHL --no-cache-dir \
-#     && rm $XFORMERS_WHL
+
+RUN pip uninstall -y transformer-engine flash-attention
+
 # 依赖pytorch，需要重新编译
 RUN git clone https://github.com/Dao-AILab/flash-attention.git \
     && cd flash-attention \
-    && git checkout v2.5.4 \
-    && MAX_JOBS=128 python setup.py install    
+    && git checkout v2.5.5 \
+    && MAX_JOBS=208 python setup.py install
 RUN cd flash-attention/csrc/layer_norm \
-    && MAX_JOBS=128 pip install .
+    && MAX_JOBS=208 pip install .
+
+# 依赖flash-attention
+# RUN pip uninstall -y transformer-engine \
+#     && MAX_JOBS=208 pip install --no-cache-dir git+https://github.com/NVIDIA/TransformerEngine.git@v1.3
+
+# # xformers依赖pytorch和flash-attention，可能影响pytorch版本，进而影响nccl版本，重装nccl
+# RUN pip install -U --no-cache-dir --no-deps xformers==0.0.22.post7 --index-url https://download.pytorch.org/whl/cu121
 RUN pip install -U --no-cache-dir bitsandbytes
 
 RUN pip install -U --no-cache-dir gradio
@@ -93,8 +90,9 @@ RUN pip install -U --no-cache-dir jsonlines
 RUN pip install -U --no-cache-dir fire
 RUN pip install -U --no-cache-dir rich
 # huggingface全家桶
-RUN pip uninstall -y trl accelerate transformer peft deepspeed datasets \
-    && pip install --no-cache-dir trl[deepspeed,peft] datasets
+RUN pip uninstall -y trl accelerate transformers peft deepspeed datasets \
+    && pip install --no-cache-dir transformers[deepspeed] \
+    && pip install --no-cache-dir trl peft datasets
 
 # vim
 RUN wget -O /root/.vimrc 'https://api.onedrive.com/v1.0/shares/u!aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBc01LbTN0MEszbFlnWlZsc0JJM1hhTGR3bWNJNHc/root/content' \
@@ -152,4 +150,4 @@ else\n\
   /bin/bash\n\
 fi' > /scripts/startup.sh && chmod +x /scripts/startup.sh
 
-CMD ["/bin/bash", "/scripts/startup.sh"]
+ENTRYPOINT ["/bin/bash", "/scripts/startup.sh"]
