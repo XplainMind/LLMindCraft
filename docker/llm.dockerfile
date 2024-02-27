@@ -78,9 +78,10 @@ RUN pip install -U --no-cache-dir bitsandbytes
 
 RUN pip install -U --no-cache-dir gradio
 RUN pip install -U --no-cache-dir pudb
-RUN pip install -U --no-cache-dir install git+https://github.com/wookayin/gpustat.git@master \
-    && pip uninstall -y nvidia-ml-py3 pynvml \
-    && pip install --force-reinstall --ignore-installed 'nvidia-ml-py'
+# # 和deepspeed冲突
+# RUN pip install -U --no-cache-dir install git+https://github.com/wookayin/gpustat.git@master \
+#     && pip uninstall -y nvidia-ml-py3 pynvml \
+#     && pip install --force-reinstall --ignore-installed 'nvidia-ml-py'
 RUN pip install -U --no-cache-dir ipykernel
 RUN pip install -U --no-cache-dir ipywidgets
 RUN pip install -U --no-cache-dir httpx[socks]
@@ -90,9 +91,10 @@ RUN pip install -U --no-cache-dir jsonlines
 RUN pip install -U --no-cache-dir fire
 RUN pip install -U --no-cache-dir rich
 # huggingface全家桶
-RUN pip uninstall -y trl accelerate transformers peft deepspeed datasets \
-    && pip install --no-cache-dir transformers[deepspeed] \
+RUN pip uninstall -y trl accelerate transformers peft deepspeed datasets
+RUN pip install --no-cache-dir transformers[deepspeed] \
     && pip install --no-cache-dir trl peft datasets
+RUN pip install -U --no-cache-dir tiktoken transformers-stream-generator openai
 
 # vim
 RUN wget -O /root/.vimrc 'https://api.onedrive.com/v1.0/shares/u!aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBc01LbTN0MEszbFlnWlZsc0JJM1hhTGR3bWNJNHc/root/content' \
