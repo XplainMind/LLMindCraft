@@ -1,0 +1,142 @@
+Sending build context to Docker daemon  346.1kB
+
+Step 1/46 : FROM nvcr.io/nvidia/pytorch:23.04-py3
+ ---> b4428941db4f
+Step 2/46 : LABEL maintainer="tothemoon"
+ ---> Using cache
+ ---> 130c4b25fea1
+Step 3/46 : WORKDIR /workspace
+ ---> Using cache
+ ---> 65bfa942c3bf
+Step 4/46 : RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg   && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg   && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null   && apt update -y   && apt install gh -y
+ ---> Using cache
+ ---> 9915e561739b
+Step 5/46 : RUN apt install -y libaio-dev
+ ---> Using cache
+ ---> a5da7900affa
+Step 6/46 : RUN apt install -y netcat
+ ---> Using cache
+ ---> 8609dc14d08b
+Step 7/46 : RUN apt install -y git-lfs
+ ---> Using cache
+ ---> bba1640a3328
+Step 8/46 : RUN apt install -y htop
+ ---> Using cache
+ ---> dbc1777f75d6
+Step 9/46 : RUN apt install -y screen
+ ---> Using cache
+ ---> ef12487fdb2f
+Step 10/46 : RUN apt install -y tmux
+ ---> Using cache
+ ---> ff9c0d68a8d9
+Step 11/46 : RUN apt install -y locales     && locale-gen en_US.UTF-8     && locale-gen zh_CN.UTF-8     && echo -e 'export LANG=zh_CN.UTF-8' >> /root/.bashrc
+ ---> Using cache
+ ---> f2c351281834
+Step 12/46 : RUN DEBIAN_FRONTEND=noninteractive apt install -y tzdata     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+ ---> Using cache
+ ---> 277f7d88b8c2
+Step 13/46 : RUN apt install -y net-tools
+ ---> Using cache
+ ---> c69e178c3d64
+Step 14/46 : RUN apt install -y openssh-server     && sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" /etc/ssh/sshd_config     && sed -i "s/#PubkeyAuthentication yes/PubkeyAuthentication yes/" /etc/ssh/sshd_config     && sed -i "s/#PasswordAuthentication yes/PasswordAuthentication no/" /etc/ssh/sshd_config     && echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config     && mkdir -p /run/sshd
+ ---> Using cache
+ ---> a367bcb2f033
+Step 15/46 : RUN apt install -y pdsh     && chown root:root /usr/lib/x86_64-linux-gnu/pdsh     && chmod 755 /usr/lib/x86_64-linux-gnu/pdsh     && chown root:root /usr/lib     && chmod 755 /usr/lib
+ ---> Using cache
+ ---> 2c779adbc54a
+Step 16/46 : RUN apt install -y bash-completion
+ ---> Using cache
+ ---> eb8d29787e20
+Step 17/46 : RUN apt install -y socat
+ ---> Using cache
+ ---> de67ebfd340d
+Step 18/46 : RUN apt install -y locate
+ ---> Using cache
+ ---> d1c2d27efb8b
+Step 19/46 : RUN apt install -y cron
+ ---> Using cache
+ ---> 0ed1c3eb7d82
+Step 20/46 : RUN apt install -y zip
+ ---> Using cache
+ ---> f87333fa6e3f
+Step 21/46 : RUN apt install -y fuse
+ ---> Using cache
+ ---> cfa642ac23d6
+Step 22/46 : RUN pip install -U --no-cache-dir pip
+ ---> Using cache
+ ---> b0cb1c763c84
+Step 23/46 : RUN pip install -U --no-cache-dir setuptools
+ ---> Using cache
+ ---> 942280971fef
+Step 24/46 : RUN pip uninstall -y transformer-engine flash-attention
+ ---> Using cache
+ ---> 1325e72d44ec
+Step 25/46 : RUN git clone https://github.com/Dao-AILab/flash-attention.git     && cd flash-attention     && git checkout v2.5.5     && MAX_JOBS=208 python setup.py install
+ ---> Using cache
+ ---> 66e9bf45bec4
+Step 26/46 : RUN cd flash-attention/csrc/layer_norm     && MAX_JOBS=208 pip install .
+ ---> Using cache
+ ---> 11487039f616
+Step 27/46 : RUN pip install -U --no-cache-dir bitsandbytes
+ ---> Using cache
+ ---> 7d7c8206e281
+Step 28/46 : RUN pip install -U --no-cache-dir gradio
+ ---> Using cache
+ ---> 1c2fe173b0fa
+Step 29/46 : RUN pip install -U --no-cache-dir pudb
+ ---> Using cache
+ ---> be5edc818f7a
+Step 30/46 : RUN pip install -U --no-cache-dir ipykernel
+ ---> Using cache
+ ---> b0e810750747
+Step 31/46 : RUN pip install -U --no-cache-dir ipywidgets
+ ---> Using cache
+ ---> d2b196b65e66
+Step 32/46 : RUN pip install -U --no-cache-dir httpx[socks]
+ ---> Using cache
+ ---> d8f011c2c036
+Step 33/46 : RUN pip install -U --no-cache-dir wandb
+ ---> Using cache
+ ---> ece3aaac6259
+Step 34/46 : RUN pip install -U --no-cache-dir openpyxl
+ ---> Using cache
+ ---> 801b47aff66e
+Step 35/46 : RUN pip install -U --no-cache-dir jsonlines
+ ---> Using cache
+ ---> 193370fba7d7
+Step 36/46 : RUN pip install -U --no-cache-dir fire
+ ---> Using cache
+ ---> 3d99cf642a0c
+Step 37/46 : RUN pip install -U --no-cache-dir rich
+ ---> Using cache
+ ---> e9e6c8024a88
+Step 38/46 : RUN pip uninstall -y trl accelerate transformers peft deepspeed datasets
+ ---> Using cache
+ ---> 3ee52d223faa
+Step 39/46 : RUN pip install --no-cache-dir transformers[deepspeed]     && pip install --no-cache-dir trl peft datasets
+ ---> Using cache
+ ---> 34dca9858315
+Step 40/46 : RUN pip install -U --no-cache-dir tiktoken transformers-stream-generator openai
+ ---> Using cache
+ ---> 1ee00d091b86
+Step 41/46 : RUN wget -O /root/.vimrc 'https://api.onedrive.com/v1.0/shares/u!aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBc01LbTN0MEszbFlnWlZsc0JJM1hhTGR3bWNJNHc/root/content'     && git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim     && vim +PluginInstall +qall
+ ---> Using cache
+ ---> 5a8ef321f657
+Step 42/46 : RUN mkdir -p /root/.config/pudb     && wget -O /root/.config/pudb/pudb.cfg 'https://api.onedrive.com/v1.0/shares/u!aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBc01LbTN0MEszbFlnWlZrQjlYNDQtTEJHWnoxVVE/root/content'
+ ---> Using cache
+ ---> f44b6c884999
+Step 43/46 : RUN mkdir -p /root/.config/htop     && wget -O /root/.config/htop/htoprc 'https://api.onedrive.com/v1.0/shares/u!aHR0cHM6Ly8xZHJ2Lm1zL3UvcyFBc01LbTN0MEszbFlnWllUeHZqZUMyb2N0MzVKZlE/root/content'
+ ---> Using cache
+ ---> 12f60873661b
+Step 44/46 : RUN echo 'termcapinfo xterm* ti@:te@' > /root/.screenrc
+ ---> Using cache
+ ---> 502293b5ee53
+Step 45/46 : RUN mkdir -p /scripts && echo -e '#!/bin/bash\nSSHD_PORT=22001\nCMD_TO_RUN=""\nwhile (( "$#" )); do\n  case "$1" in\n    --sshd_port)\n      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then\n        SSHD_PORT=$2\n        shift 2\n      else\n        echo "Error: Argument for $1 is missing" >&2\n        exit 1\n      fi\n      ;;\n    --cmd)\n      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then\n        CMD_TO_RUN=$2\n        shift 2\n      else\n        echo "Error: Argument for $1 is missing" >&2\n        exit 1\n      fi\n      ;;\n    -*|--*=) \n      echo "Error: Unsupported flag $1" >&2\n      exit 1\n      ;;\n    *) \n      shift\n      ;;\n  esac\ndone\nsed -i "s/#Port 22/Port $SSHD_PORT/" /etc/ssh/sshd_config\n/usr/sbin/sshd\nif [ -n "$CMD_TO_RUN" ]; then\n  bash -c "$CMD_TO_RUN"\nelse\n  /bin/bash\nfi' > /scripts/startup.sh && chmod +x /scripts/startup.sh
+ ---> Using cache
+ ---> ae15e46be453
+Step 46/46 : ENTRYPOINT ["/bin/bash", "/scripts/startup.sh"]
+ ---> Using cache
+ ---> 09c7746fa3d7
+[Warning] One or more build-args [all_proxy] were not consumed
+Successfully built 09c7746fa3d7
+Successfully tagged llm:latest
